@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+%Author%
+%Date%
+
+This file only runs phpunit on the LATEST branch. should not be on staging
+branch  
+-->
+
+<!-- Directory Definition -->
+<project name="API" default="build" basedir=".">
+    <property name="project-name" value="${ant.project.name}"/>
+ <property name="ignore" value="vendor/*"/>
+ <property name="phpcb-ignore" value="lib/vendor/,test/,build/"/>
+ <property name="include-extenstions" value="php"/>
+
+
+ <!-- End of Directory Definition -->
+
+ <!-- Clean up and rebase -->
+ <target name="clean" description="Clean up and create artifact directories">
+  <delete dir="${basedir}/build/api"/>
+  <delete dir="${basedir}/build/apigen"/>
+  <delete dir="${basedir}/build/code-browser"/>
+  <delete dir="${basedir}/build/coverage"/>
+  <delete dir="${basedir}/build/logs"/>
+  <delete dir="${basedir}/build/pdepend"/>
+
+  <mkdir dir="${basedir}/build/apigen"/>
+  <antcall target="apigen"/>
+ </target>
+ <!-- End of Clean up and rebase -->
+ <target name="apigen" description ="Generate API documentation using ApiGen">
+    <exec executable="apigen">
+        <arg line="--title API 
+                   --config apigen.neon 
+                   --report ${basedir}/build/apigen/checkstyle.xml
+                   --destination ${basedir}/build/apigen/"/>
+    </exec>
+ </target>
+ <!-- Exception handling -->
+ <target name="phpunit" description="Run unit tests using PHPUnit and generates junit.xml and clover.xml">
+    <exec executable="phpunit" failonerror="true"/>
+</target>
+
+<!-- End of exception handling -->
+
+  
+ <target name="build" depends="clean,phpunit"/>
+</project>

@@ -1,0 +1,113 @@
+<?php
+/**
+ * Bootstrap for Creative Channel Core REST API
+ *
+ * @copyright (c) 2012-2014, Creative Channel Services
+ * @author Danny Knapp <dknapp@creativechannel.com>
+ *
+ * @version %Date: 01/23/2013 05:13:06 PM % %Author: Danny Knapp <dknapp@creativechannel.com> %
+ *
+ * @internal
+ */
+
+/**
+ * Define the position of the module within the requested URI
+ */
+define( 'MODULE_PATH_INDEX',        1 );
+
+/**
+ * Disable xdebug if installed
+ */
+if ( function_exists( 'xdebug_disable' ) )
+{
+    xdebug_disable();
+}
+
+/**
+ * Auto-load dependencies
+ */
+spl_autoload_extensions( ".class.php, .config.php, .php" );
+spl_autoload_register();
+
+/**
+ * Load environment configuration
+ */
+require  'config/rest_api.config.php';
+require  'core/config/bootstrap.php';
+
+/**
+ * Debugging console output
+ */
+use \lib\DebugConsole;
+
+$debugOptions = array
+(
+    'Current environment' => ENVIRONMENT,
+    'API server'   => $_SERVER[ 'SERVER_NAME' ]
+);
+DebugConsole::init( $debugOptions );
+
+/**
+ * Bootstrap Luracast RESTler framework
+ */
+DebugConsole::log( "Bootstrapping RESTler framework" );
+require 'vendor/restler/restler/restler.php';
+spl_autoload_register( 'spl_autoload' );
+$restler = new Restler();
+
+/**
+ * Specify output formats
+ */
+$restler->setSupportedFormats(
+        'JsonFormat',
+        'XmlFormat',
+        'JsonpFormat'
+        );
+
+/**
+ * Load authentication interfaces
+ */
+$restler->addAuthenticationClass( 'AuthApi' );
+$restler->addAuthenticationClass( 'AuthMember' );
+$restler->addAuthenticationClass( 'AuthApiGroup' );
+
+/**
+ * Map the API modules
+ */
+$modules = array
+(
+    'authtest'      => 'AuthTest',
+    'profile'       => 'Profile',
+    'profilegroup'  => 'ProfileGroup',
+    'apikey'        => 'ApiKey',
+    'apikeymanager' => 'ApiKeyManager',
+    'geocode'       => 'GeoCode',
+    'application'   => 'Application',
+    'achievement'   => 'Achievement',
+    'waitinglist'   => 'WaitingList',
+    'tracker'       => 'Tracker',
+    'badge'         => 'Badge',
+    'accountspayable'   => 'AccountsPayable',
+    'store'         => 'Store',
+    'employer'      => 'Employer',
+    'organization'  => 'Organization',
+);
+
+/**
+ * Determine the requested module
+ */
+$path = explode( '/', $_SERVER[ 'PATH_INFO' ] );
+$id = strtolower( $path[ MODULE_PATH_INDEX ] );
+
+/**
+ * Load the requested API module
+ */
+if ( in_array( $id, array_keys( $modules ) ) )
+{
+    $restler->addAPIClass( $modules[ $id ] );
+}
+
+/**
+ * Process requests
+ */
+$restler->handle();

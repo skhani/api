@@ -1,0 +1,76 @@
+<?php
+
+/**
+ * Define the position of the module within the requested URI
+ */
+define('MODULE_PATH_INDEX', 1);
+spl_autoload_extensions(".class.php, .config.php, .php");
+spl_autoload_register();
+
+
+/**
+ * Load environment configuration
+ */
+require 'config/rest_api.config.php';
+require 'core/config/bootstrap.php';
+
+/**
+ * Debugging console output
+ */
+use \lib\DebugConsole;
+
+$debugOptions = array
+    (
+    'Current environment' => ENVIRONMENT,
+    'API server' => $_SERVER['SERVER_NAME']
+);
+
+DebugConsole::init($debugOptions);
+
+/**
+ * Bootstrap Luracast RESTler framework
+ */
+DebugConsole::log("Bootstrapping RESTler framework");
+
+require 'vendor/restler/restler/restler.php';
+spl_autoload_register('spl_autoload');
+
+
+$restler = new cscRestler();
+
+
+/**
+ * Specify output formats
+ */
+$restler->setSupportedFormats(
+        'JsonFormat', 'XmlFormat', 'JsonpFormat'
+);
+
+$restler->addAuthenticationClass('CscAuthApi');
+
+/**
+ * Map the API modules
+ */
+$modules = array
+    (
+    'course' => "Course",
+);
+
+/**
+ * Determine the requested module
+ */
+$path = explode('/', $_SERVER['PATH_INFO']);
+$id = strtolower($path[MODULE_PATH_INDEX]);
+
+/**
+ * Load the requested API module
+ */
+if( in_array($id, array_keys($modules)) ) {
+    $restler->addAPIClass($modules[$id]);
+}
+
+
+/**
+ * Process requests
+ */
+$restler->handle();
